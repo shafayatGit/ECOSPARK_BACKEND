@@ -15,6 +15,11 @@ model User {
   accounts           Account[]
   admin              Admin?
 
+  categoriesCreated  Category[]
+  ideasAuthored      Idea[]
+  votes              Vote[]
+  comments           Comment[]
+  ideaPurchases      IdeaPurchase[]
 
   @@unique([email])
   @@map("user")

@@ -1,0 +1,19 @@
+model IdeaPurchase {
+  id            String        @id @default(uuid(7))
+  transactionId String        @unique
+  paymentStatus PaymentStatus @default(PENDING)
+  amountPaid    Decimal       @db.Decimal(10, 2)
+  gateway       String
+  completedAt   DateTime?
+  createdAt     DateTime      @default(now())
+
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  ideaId        String
+  idea          Idea          @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  @@index([userId, ideaId])
+  @@index([ideaId])
+  @@map("idea_purchases")
+}

@@ -8,3 +8,21 @@ enum UserStatus {
     ACTIVE
     INACTIVE
 }
+
+enum IdeaStatus {
+    DRAFT
+    PENDING
+    UNDER_REVIEW
+    APPROVED
+    REJECTED
+}
+
+enum VoteType {
+    UPVOTE
+    DOWNVOTE
+}
+
+enum PaymentStatus {
+    PENDING
+    COMPLETED
+}

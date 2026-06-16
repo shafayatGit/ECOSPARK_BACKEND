@@ -1,0 +1,15 @@
+model Vote {
+  id        String   @id @default(uuid(7))
+  type      VoteType
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  ideaId    String
+  idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, ideaId])
+  @@index([ideaId])
+  @@map("votes")
+}

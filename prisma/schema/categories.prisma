@@ -1,0 +1,18 @@
+model Category {
+  id          String   @id @default(uuid(7))
+  name        String
+  slug        String
+  description String?
+
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  ideas       Idea[]
+
+  createdAt   DateTime @default(now())
+
+  @@unique([name])
+  @@unique([slug])
+  @@index([createdById])
+  @@map("categories")
+}

@@ -1,0 +1,23 @@
+model Comment {
+  id        String   @id @default(uuid(7))
+  content   String
+
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  ideaId    String
+  idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  parentId  String?
+  parent    Comment? @relation("CommentToReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies   Comment[] @relation("CommentToReplies")
+
+  @@index([ideaId, createdAt])
+  @@index([parentId])
+  @@index([authorId])
+  @@map("comments")
+}

@@ -1,0 +1,35 @@
+model Idea {
+  id                String     @id @default(uuid(7))
+  title             String
+  problemStatement  String
+  proposedSolution  String
+  description       String?
+
+  status            IdeaStatus @default(PENDING)
+  isPaid            Boolean    @default(false)
+  price             Decimal?   @db.Decimal(10, 2)
+  imageUrls         String[]
+  rejectionFeedback String?
+
+  upvoteCount       Int        @default(0)
+  downvoteCount     Int        @default(0)
+
+  publishedAt       DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  authorId          String
+  author            User       @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  categoryId        String
+  category          Category   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  votes             Vote[]
+  comments          Comment[]
+  purchases         IdeaPurchase[]
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([status, createdAt])
+  @@map("ideas")
+}

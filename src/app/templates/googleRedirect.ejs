@@ -3,11 +3,78 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Google Login</title>
+    <title>Redirecting...</title>
+    <style>
+      body {
+        margin: 0;
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Arial,
+          sans-serif;
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .card {
+        text-align: center;
+        padding: 40px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .logo {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top: 4px solid #3b82f6;
+        border-radius: 50%;
+        margin: 20px auto;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .text {
+        opacity: 0.8;
+        font-size: 14px;
+      }
+
+      a {
+        color: #60a5fa;
+        text-decoration: none;
+      }
+    </style>
   </head>
   <body>
-    <div>
-      <p>Redirecting To Google...</p>
+    <div class="card">
+      <div class="logo">Redirecting to Google</div>
+
+      <div class="spinner"></div>
+
+      <div class="text">
+        You will be redirected in 3 seconds...<br />
+        If not, <a href="https://www.google.com">click here</a>
+      </div>
     </div>
   </body>
   <script>

@@ -1,0 +1,8 @@
+model NewsletterSubscriber {
+  id           String   @id @default(uuid(7))
+  email        String   @unique
+  isActive     Boolean  @default(true)
+  subscribedAt DateTime @default(now())
+
+  @@map("newsletter_subscribers")
+}

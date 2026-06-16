@@ -55,7 +55,13 @@ export const ModelName = {
   User: 'User',
   Session: 'Session',
   Account: 'Account',
-  Verification: 'Verification'
+  Verification: 'Verification',
+  Category: 'Category',
+  Comment: 'Comment',
+  IdeaPurchase: 'IdeaPurchase',
+  Idea: 'Idea',
+  NewsletterSubscriber: 'NewsletterSubscriber',
+  Vote: 'Vote'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -150,6 +156,91 @@ export const VerificationScalarFieldEnum = {
 } as const
 
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
+
+
+export const CategoryScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  description: 'description',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type CategoryScalarFieldEnum = (typeof CategoryScalarFieldEnum)[keyof typeof CategoryScalarFieldEnum]
+
+
+export const CommentScalarFieldEnum = {
+  id: 'id',
+  content: 'content',
+  isDeleted: 'isDeleted',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  authorId: 'authorId',
+  ideaId: 'ideaId',
+  parentId: 'parentId'
+} as const
+
+export type CommentScalarFieldEnum = (typeof CommentScalarFieldEnum)[keyof typeof CommentScalarFieldEnum]
+
+
+export const IdeaPurchaseScalarFieldEnum = {
+  id: 'id',
+  transactionId: 'transactionId',
+  paymentStatus: 'paymentStatus',
+  amountPaid: 'amountPaid',
+  gateway: 'gateway',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  userId: 'userId',
+  ideaId: 'ideaId'
+} as const
+
+export type IdeaPurchaseScalarFieldEnum = (typeof IdeaPurchaseScalarFieldEnum)[keyof typeof IdeaPurchaseScalarFieldEnum]
+
+
+export const IdeaScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  problemStatement: 'problemStatement',
+  proposedSolution: 'proposedSolution',
+  description: 'description',
+  status: 'status',
+  isPaid: 'isPaid',
+  price: 'price',
+  imageUrls: 'imageUrls',
+  rejectionFeedback: 'rejectionFeedback',
+  upvoteCount: 'upvoteCount',
+  downvoteCount: 'downvoteCount',
+  publishedAt: 'publishedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  authorId: 'authorId',
+  categoryId: 'categoryId'
+} as const
+
+export type IdeaScalarFieldEnum = (typeof IdeaScalarFieldEnum)[keyof typeof IdeaScalarFieldEnum]
+
+
+export const NewsletterSubscriberScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  isActive: 'isActive',
+  subscribedAt: 'subscribedAt'
+} as const
+
+export type NewsletterSubscriberScalarFieldEnum = (typeof NewsletterSubscriberScalarFieldEnum)[keyof typeof NewsletterSubscriberScalarFieldEnum]
+
+
+export const VoteScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  createdAt: 'createdAt',
+  userId: 'userId',
+  ideaId: 'ideaId'
+} as const
+
+export type VoteScalarFieldEnum = (typeof VoteScalarFieldEnum)[keyof typeof VoteScalarFieldEnum]
 
 
 export const SortOrder = {
