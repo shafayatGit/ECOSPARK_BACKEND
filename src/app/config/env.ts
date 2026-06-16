@@ -12,6 +12,8 @@ interface EnvConfig {
     CLOUDINARY_API_KEY: string;
     CLOUDINARY_API_SECRET: string;
   };
+  BETTER_AUTH_SECRET: string;
+  BETTER_AUTH_URL: string;
 }
 
 const loadEnvVariables = (): EnvConfig => {
@@ -22,6 +24,8 @@ const loadEnvVariables = (): EnvConfig => {
     "CLOUDINARY_CLOUD_NAME",
     "CLOUDINARY_API_KEY",
     "CLOUDINARY_API_SECRET",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
   ];
 
   requiredEnvVariables.forEach((variable) => {
@@ -41,6 +45,8 @@ const loadEnvVariables = (): EnvConfig => {
       CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
       CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET as string,
     },
+    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET as string,
+    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL as string,
   };
 };
 
