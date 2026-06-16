@@ -18,24 +18,24 @@ export const auth = betterAuth({
     requireEmailVerification: true,
   },
 
-  //   socialProviders: {
-  //     google: {
-  //       clientId: envVars.GOOGLE_CLIENT_ID,
-  //       clientSecret: envVars.GOOGLE_CLIENT_SECRET,
+  socialProviders: {
+    google: {
+      clientId: envVars.GOOGLE_CLIENT_ID,
+      clientSecret: envVars.GOOGLE_CLIENT_SECRET,
 
-  //       mapProfileToUser() {
-  //         // This function will be called after successful authentication with Google, and the returned object will be used to create or update the user in the database.
-  //         return {
-  //           role: Role.PATIENT,
-  //           status: UserStatus.ACTIVE,
-  //           emailVerified: true,
-  //           needPasswordChange: false,
-  //           isDeleted: false,
-  //           deletedAt: null,
-  //         };
-  //       },
-  //     },
-  //   },
+      mapProfileToUser() {
+        // This function will be called after successful authentication with Google, and the returned object will be used to create or update the user in the database.
+        return {
+          role: UserRole.MEMBER,
+          status: UserStatus.ACTIVE,
+          emailVerified: true,
+          needPasswordChange: false,
+          isDeleted: false,
+          deletedAt: null,
+        };
+      },
+    },
+  },
 
   emailVerification: {
     sendOnSignUp: true,
@@ -129,40 +129,40 @@ export const auth = betterAuth({
     }),
   ],
 
-  //   session: {
-  //     expiresIn: 60 * 60 * 60 * 24, // 1 day in seconds
-  //     updateAge: 60 * 60 * 60 * 24 * 7, // 7 day in seconds
-  //     cookieCache: {
-  //       enabled: true,
-  //       maxAge: 60 * 60 * 60 * 24, // 1 day in seconds
-  //     },
-  //   },
-  //   redirectURLs: {
-  //     signIn: `${envVars.BETTER_AUTH_URL}/api/v1/auth/google/success`,
-  //   },
-  //   trustedOrigins: [
-  //     envVars.BETTER_AUTH_URL || "http://localhost:8000",
-  //     envVars.FRONTEND_URL,
-  //   ],
-  // advanced: {
-  //   useSecureCookies: false,
-  //   cookies: {
-  //     state: {
-  //       attributes: {
-  //         sameSite: "none",
-  //         secure: true,
-  //         httpOnly: true,
-  //         path: "/",
-  //       },
-  //     },
-  //     sessionToken: {
-  //       attributes: {
-  //         sameSite: "none",
-  //         secure: true,
-  //         httpOnly: true,
-  //         path: "/",
-  //       },
-  //     },
-  //   },
-  // },
+  session: {
+    expiresIn: 60 * 60 * 60 * 24, // 1 day in seconds
+    updateAge: 60 * 60 * 60 * 24 * 7, // 7 day in seconds
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 60 * 60 * 24, // 1 day in seconds
+    },
+  },
+  redirectURLs: {
+    signIn: `${envVars.BETTER_AUTH_URL}/auth/google/success`,
+  },
+  trustedOrigins: [
+    envVars.BETTER_AUTH_URL || "http://localhost:9000",
+    envVars.FRONTEND_URL,
+  ],
+  advanced: {
+    useSecureCookies: false,
+    cookies: {
+      state: {
+        attributes: {
+          sameSite: "none",
+          secure: true,
+          httpOnly: true,
+          path: "/",
+        },
+      },
+      sessionToken: {
+        attributes: {
+          sameSite: "none",
+          secure: true,
+          httpOnly: true,
+          path: "/",
+        },
+      },
+    },
+  },
 });

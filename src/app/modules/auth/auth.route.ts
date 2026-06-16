@@ -1,13 +1,18 @@
 import { Router } from "express";
-import { AuthControlles } from "./auth.controller";
+import { AuthControllers, AuthControlles } from "./auth.controller";
 
 const router = Router();
 
-router.post("/register", AuthControlles.registerPatient);
-router.post("/verify-email", AuthControlles.verifyEmail);
-router.post("/login", AuthControlles.loginUser);
-router.post("/logout", AuthControlles.logOutUser);
-router.post("/forget-password", AuthControlles.forgetPassword);
-router.post("/reset-password", AuthControlles.resetPassword);
+router.post("/register", AuthControllers.registerPatient);
+router.post("/verify-email", AuthControllers.verifyEmail);
+router.post("/login", AuthControllers.loginUser);
+router.post("/logout", AuthControllers.logOutUser);
+router.post("/forget-password", AuthControllers.forgetPassword);
+router.post("/reset-password", AuthControllers.resetPassword);
+
+//Google Routes
+router.get("/login/google", AuthControllers.googleLogin);
+router.get("/google/success", AuthControllers.googleLoginSuccess);
+router.get("/oauth/error", AuthControllers.handleOAuthError);
 
 export const AuthRoutes = router;

@@ -174,6 +174,40 @@ const logOutUser = async (sessionToken: string) => {
   });
   return result;
 };
+
+const googleLoginSuccess = async (session: Record<string, any>) => {
+  const isUserExist = await prisma.user.findUnique({
+    where: {
+      id: session.user.id,
+    },
+  });
+
+  if (!isUserExist) {
+    await prisma.user.create({
+      data: {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+      },
+    });
+  }
+
+  const accessToken = tokenUtils.getAccessToken({
+    userId: session.user.id,
+    role: session.user.role,
+    name: session.user.name,
+  });
+
+  const refreshToken = tokenUtils.getRefreshToken({
+    userId: session.user.id,
+    role: session.user.role,
+    name: session.user.name,
+  });
+  return {
+    accessToken,
+    refreshToken,
+  };
+};
 export const AuthServices = {
   registerPatient,
   verifyEmail,
@@ -181,4 +215,5 @@ export const AuthServices = {
   logOutUser,
   forgetPassword,
   resetPassword,
+  googleLoginSuccess,
 };
