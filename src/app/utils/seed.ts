@@ -3,24 +3,24 @@ import { envVars } from "../config/env";
 import { auth } from "../lib/auth";
 import { prisma } from "../lib/prisma";
 
-export const seedSuperAdmin = async () => {
+export const seedAdmin = async () => {
   try {
-    const isSuperAdminExist = await prisma.user.findFirst({
+    const isAdminExist = await prisma.user.findFirst({
       where: {
-        role: Role.SUPER_ADMIN,
+        email: envVars.ADMIN_EMAIL,
       },
     });
 
-    if (isSuperAdminExist) {
-      console.log("Super admin already exists. Skipping seeding super admin.");
+    if (isAdminExist) {
+      console.log("Admin already exists. Skipping seeding admin.");
       return;
     }
 
-    const superAdminUser = await auth.api.signUpEmail({
+    const adminUser = await auth.api.signUpEmail({
       body: {
-        email: envVars.SUPER_ADMIN_EMAIL,
-        password: envVars.SUPER_ADMIN_PASSWORD,
-        name: "Super Admin",
+        email: envVars.ADMIN_EMAIL,
+        password: envVars.ADMIN_PASSWORD,
+        name: "Ecospark Admin",
         role: UserRole.ADMIN,
         needPasswordChange: false,
         rememberMe: false,
@@ -30,7 +30,7 @@ export const seedSuperAdmin = async () => {
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: {
-          id: superAdminUser.user.id,
+          id: adminUser.user.id,
         },
         data: {
           emailVerified: true,
@@ -39,28 +39,29 @@ export const seedSuperAdmin = async () => {
 
       await tx.admin.create({
         data: {
-          userId: superAdminUser.user.id,
-          name: "Super Admin",
-          email: envVars.SUPER_ADMIN_EMAIL,
+          userId: adminUser.user.id,
+          name: "Ecospark Admin",
+          email: envVars.ADMIN_EMAIL,
         },
       });
     });
 
-    const superAdmin = await prisma.admin.findFirst({
+    //just for showing in console that admin is created successfully
+    const admin = await prisma.admin.findFirst({
       where: {
-        email: envVars.SUPER_ADMIN_EMAIL,
+        email: envVars.ADMIN_EMAIL,
       },
       include: {
         user: true,
       },
     });
 
-    console.log("Super Admin Created ", superAdmin);
+    console.log("Super Admin Created ", admin);
   } catch (error) {
     console.error("Error seeding super admin: ", error);
     await prisma.user.delete({
       where: {
-        email: envVars.SUPER_ADMIN_EMAIL,
+        email: envVars.ADMIN_EMAIL,
       },
     });
   }
