@@ -9,7 +9,7 @@ export const validateRequest = (zodObject: z.ZodObject) => {
     const parseResult = zodObject.safeParse(req.body);
 
     if (!parseResult.success) {
-      next(parseResult.error);
+      return next(parseResult.error);
     }
 
     // If validation is successful, proceed to the controller

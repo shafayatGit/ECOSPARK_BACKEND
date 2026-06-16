@@ -6,6 +6,8 @@ import { auth } from "./app/lib/auth";
 import path from "path";
 import cookieParser from "cookie-parser";
 import { envVars } from "./app/config/env";
+import { globalErrorHandler } from "./app/middlewares/globalErrorHandler";
+import notFound from "./app/middlewares/notFound";
 
 const app: Application = express();
 app.use(
@@ -39,5 +41,8 @@ app.use("", IndexRoutes);
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello from EcoSpark🔥");
 });
+
+app.use(notFound);
+app.use(globalErrorHandler);
 
 export default app;

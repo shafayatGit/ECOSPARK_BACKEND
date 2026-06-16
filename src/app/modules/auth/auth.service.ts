@@ -7,6 +7,14 @@ import { UserStatus } from "../../../generated/prisma/browser";
 import { tokenUtils } from "../../utils/token";
 
 const registerPatient = async (payload: IRegisterMember) => {
+  const isUserExist = await prisma.user.findUnique({
+    where: {
+      email: payload.email,
+    },
+  });
+  if (isUserExist) {
+    throw new AppError(status.BAD_REQUEST, "User already exists");
+  }
   const { name, email, password } = payload;
   const data = await auth.api.signUpEmail({
     body: {
