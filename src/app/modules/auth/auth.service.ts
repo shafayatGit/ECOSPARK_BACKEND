@@ -4,6 +4,7 @@ import { auth } from "../../lib/auth";
 import { ILoginUser, IRegisterMember } from "./auth.interface";
 import { prisma } from "../../lib/prisma";
 import { UserStatus } from "../../../generated/prisma/browser";
+import { tokenUtils } from "../../utils/token";
 
 const registerPatient = async (payload: IRegisterMember) => {
   const { name, email, password } = payload;
@@ -18,7 +19,29 @@ const registerPatient = async (payload: IRegisterMember) => {
     throw new AppError(status.BAD_REQUEST, "Failed to create user");
   }
 
+  const accessToken = tokenUtils.getAccessToken({
+    userId: data.user.id,
+    role: data.user.role,
+    name: data.user.name,
+    email: data.user.email,
+    status: data.user.status,
+    isDeleted: data.user.isDeleted,
+    emailVerified: data.user.emailVerified,
+  });
+
+  const refreshToken = tokenUtils.getRefreshToken({
+    userId: data.user.id,
+    role: data.user.role,
+    name: data.user.name,
+    email: data.user.email,
+    status: data.user.status,
+    isDeleted: data.user.isDeleted,
+    emailVerified: data.user.emailVerified,
+  });
+
   return {
+    accessToken,
+    refreshToken,
     ...data,
   };
 };
@@ -58,9 +81,89 @@ const loginUser = async (payload: ILoginUser) => {
     );
   }
 
+  const accessToken = tokenUtils.getAccessToken({
+    userId: data.user.id,
+    role: data.user.role,
+    name: data.user.name,
+    email: data.user.email,
+    status: data.user.status,
+    isDeleted: data.user.isDeleted,
+    emailVerified: data.user.emailVerified,
+  });
+
+  const refreshToken = tokenUtils.getRefreshToken({
+    userId: data.user.id,
+    role: data.user.role,
+    name: data.user.name,
+    email: data.user.email,
+    status: data.user.status,
+    isDeleted: data.user.isDeleted,
+    emailVerified: data.user.emailVerified,
+  });
+
   return {
+    accessToken,
+    refreshToken,
     ...data,
   };
+};
+
+const forgetPassword = async (email: string) => {
+  const isUserExist = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+  if (!isUserExist) {
+    throw new AppError(status.NOT_FOUND, "User not found");
+  }
+  const result = await auth.api.requestPasswordResetEmailOTP({
+    body: {
+      email,
+    },
+  });
+  return result;
+};
+
+const resetPassword = async (
+  email: string,
+  otp: string,
+  newPassword: string,
+) => {
+  const isUserExist = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+  if (!isUserExist) {
+    throw new AppError(status.NOT_FOUND, "User not found");
+  }
+
+  const result = await auth.api.resetPasswordEmailOTP({
+    body: {
+      email,
+      otp,
+      password: newPassword,
+    },
+  });
+
+  if (isUserExist.needPasswordChange) {
+    await prisma.user.update({
+      where: {
+        id: isUserExist.id,
+      },
+      data: {
+        needPasswordChange: false,
+      },
+    });
+  }
+
+  await prisma.session.deleteMany({
+    where: {
+      userId: isUserExist.id,
+    },
+  });
+  return result;
 };
 
 const logOutUser = async (sessionToken: string) => {
@@ -76,4 +179,6 @@ export const AuthServices = {
   verifyEmail,
   loginUser,
   logOutUser,
+  forgetPassword,
+  resetPassword,
 };
