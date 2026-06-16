@@ -3,6 +3,8 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
 import { envVars } from "../config/env";
 import { UserRole, UserStatus } from "../../generated/prisma/enums";
+import { bearer, emailOTP } from "better-auth/plugins";
+import { sendEmail } from "../utils/email";
 // If your Prisma file is located elsewhere, you can change the path
 
 export const auth = betterAuth({
@@ -71,67 +73,61 @@ export const auth = betterAuth({
     },
   },
 
-  //   plugins: [
-  //     bearer(), // For API authentication using Bearer tokens (access tokens)
-  //     emailOTP({
-  //       overrideDefaultEmailVerification: true,
-  //       async sendVerificationOTP({ email, otp, type }) {
-  //         if (type === "email-verification") {
-  //           const user = await prisma.user.findUnique({
-  //             where: {
-  //               email,
-  //             },
-  //           });
+  plugins: [
+    bearer(), // For API authentication using Bearer tokens (access tokens)
+    emailOTP({
+      overrideDefaultEmailVerification: true,
+      async sendVerificationOTP({ email, otp, type }) {
+        if (type === "email-verification") {
+          const user = await prisma.user.findUnique({
+            where: {
+              email,
+            },
+          });
 
-  //           if (!user) {
-  //             console.log(
-  //               `User with this email ${email} not found. Cannot send verification OTP.`,
-  //             );
-  //             return;
-  //           }
-  //           if (user && user.role === Role.SUPER_ADMIN) {
-  //             console.log(
-  //               `User with this email ${email} is a super admin so skipping sending verification OTP`,
-  //             );
-  //             return;
-  //           }
+          if (!user) {
+            console.log(
+              `User with this email ${email} not found. Cannot send verification OTP.`,
+            );
+            return;
+          }
 
-  //           if ((user && !user.emailVerified) || user.role !== Role.SUPER_ADMIN) {
-  //             sendEmail({
-  //               to: email,
-  //               subject: "Verify your email",
-  //               templateName: "otp",
-  //               templateData: {
-  //                 name: user.name,
-  //                 otp,
-  //               },
-  //             });
-  //           }
-  //         } else if (type === "forget-password") {
-  //           const user = await prisma.user.findUnique({
-  //             where: {
-  //               email,
-  //             },
-  //           });
-  //           // TODO: Send forget password OTP
-  //           if (user) {
-  //             sendEmail({
-  //               to: email,
-  //               subject: "Reset your password",
-  //               templateName: "otp",
-  //               templateData: {
-  //                 name: user.name,
-  //                 otp,
-  //               },
-  //             });
-  //           }
-  //         }
-  //       },
+          if (user && !user.emailVerified) {
+            sendEmail({
+              to: email,
+              subject: "Verify your email",
+              templateName: "otp",
+              templateData: {
+                name: user.name,
+                otp,
+              },
+            });
+          }
+        } else if (type === "forget-password") {
+          const user = await prisma.user.findUnique({
+            where: {
+              email,
+            },
+          });
+          // TODO: Send forget password OTP
+          if (user) {
+            sendEmail({
+              to: email,
+              subject: "Reset your password",
+              templateName: "otp",
+              templateData: {
+                name: user.name,
+                otp,
+              },
+            });
+          }
+        }
+      },
 
-  //       expiresIn: 2 * 60,
-  //       otpLength: 6,
-  //     }),
-  //   ],
+      expiresIn: 2 * 60,
+      otpLength: 6,
+    }),
+  ],
 
   //   session: {
   //     expiresIn: 60 * 60 * 60 * 24, // 1 day in seconds

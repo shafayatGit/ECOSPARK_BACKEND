@@ -14,6 +14,13 @@ interface EnvConfig {
   };
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
+  EMAIL_SENDER_SMTP_USER: string;
+  EMAIL_SENDER_SMTP_PASS: string;
+  EMAIL_SENDER_SMTP_HOST: string;
+  EMAIL_SENDER_SMTP_PORT: string;
+  EMAIL_SENDER_SMTP_FROM: string;
+  SUPER_ADMIN_EMAIL: string;
+  SUPER_ADMIN_PASSWORD: string;
 }
 
 const loadEnvVariables = (): EnvConfig => {
@@ -26,6 +33,13 @@ const loadEnvVariables = (): EnvConfig => {
     "CLOUDINARY_API_SECRET",
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
+    "EMAIL_SENDER_SMTP_USER",
+    "EMAIL_SENDER_SMTP_PASS",
+    "EMAIL_SENDER_SMTP_HOST",
+    "EMAIL_SENDER_SMTP_PORT",
+    "EMAIL_SENDER_SMTP_FROM",
+    "SUPER_ADMIN_EMAIL",
+    "SUPER_ADMIN_PASSWORD",
   ];
 
   requiredEnvVariables.forEach((variable) => {
@@ -47,6 +61,13 @@ const loadEnvVariables = (): EnvConfig => {
     },
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET as string,
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL as string,
+    EMAIL_SENDER_SMTP_USER: process.env.EMAIL_SENDER_SMTP_USER as string,
+    EMAIL_SENDER_SMTP_PASS: process.env.EMAIL_SENDER_SMTP_PASS as string,
+    EMAIL_SENDER_SMTP_HOST: process.env.EMAIL_SENDER_SMTP_HOST as string,
+    EMAIL_SENDER_SMTP_PORT: process.env.EMAIL_SENDER_SMTP_PORT as string,
+    EMAIL_SENDER_SMTP_FROM: process.env.EMAIL_SENDER_SMTP_FROM as string,
+    SUPER_ADMIN_EMAIL: process.env.SUPER_ADMIN_EMAIL as string,
+    SUPER_ADMIN_PASSWORD: process.env.SUPER_ADMIN_PASSWORD as string,
   };
 };
 
