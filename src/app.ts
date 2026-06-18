@@ -8,6 +8,7 @@ import cookieParser from "cookie-parser";
 import { envVars } from "./app/config/env";
 import { globalErrorHandler } from "./app/middlewares/globalErrorHandler";
 import notFound from "./app/middlewares/notFound";
+import { PurchaseControllers } from "./app/modules/purchases/purchases.controller";
 
 const app: Application = express();
 app.use(
@@ -27,6 +28,12 @@ app.use("/api/auth", toNodeHandler(auth));
 app.set("view engine", "ejs"); // Set the views directory to the absolute path of src/app/templates
 app.set("views", path.resolve(process.cwd(), `src/app/templates`));
 
+
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  PurchaseControllers.handleStripeWebhook,
+);
 // Enable URL-encoded form data parsing
 app.use(express.urlencoded({ extended: true }));
 

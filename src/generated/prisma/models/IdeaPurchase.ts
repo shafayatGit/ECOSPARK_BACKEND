@@ -40,6 +40,7 @@ export type IdeaPurchaseMinAggregateOutputType = {
   paymentStatus: $Enums.PaymentStatus | null
   amountPaid: runtime.Decimal | null
   gateway: string | null
+  stripeEventId: string | null
   completedAt: Date | null
   createdAt: Date | null
   userId: string | null
@@ -52,6 +53,7 @@ export type IdeaPurchaseMaxAggregateOutputType = {
   paymentStatus: $Enums.PaymentStatus | null
   amountPaid: runtime.Decimal | null
   gateway: string | null
+  stripeEventId: string | null
   completedAt: Date | null
   createdAt: Date | null
   userId: string | null
@@ -64,6 +66,7 @@ export type IdeaPurchaseCountAggregateOutputType = {
   paymentStatus: number
   amountPaid: number
   gateway: number
+  stripeEventId: number
   completedAt: number
   createdAt: number
   userId: number
@@ -86,6 +89,7 @@ export type IdeaPurchaseMinAggregateInputType = {
   paymentStatus?: true
   amountPaid?: true
   gateway?: true
+  stripeEventId?: true
   completedAt?: true
   createdAt?: true
   userId?: true
@@ -98,6 +102,7 @@ export type IdeaPurchaseMaxAggregateInputType = {
   paymentStatus?: true
   amountPaid?: true
   gateway?: true
+  stripeEventId?: true
   completedAt?: true
   createdAt?: true
   userId?: true
@@ -110,6 +115,7 @@ export type IdeaPurchaseCountAggregateInputType = {
   paymentStatus?: true
   amountPaid?: true
   gateway?: true
+  stripeEventId?: true
   completedAt?: true
   createdAt?: true
   userId?: true
@@ -209,6 +215,7 @@ export type IdeaPurchaseGroupByOutputType = {
   paymentStatus: $Enums.PaymentStatus
   amountPaid: runtime.Decimal
   gateway: string
+  stripeEventId: string | null
   completedAt: Date | null
   createdAt: Date
   userId: string
@@ -244,6 +251,7 @@ export type IdeaPurchaseWhereInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFilter<"IdeaPurchase"> | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFilter<"IdeaPurchase"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFilter<"IdeaPurchase"> | string
+  stripeEventId?: Prisma.StringNullableFilter<"IdeaPurchase"> | string | null
   completedAt?: Prisma.DateTimeNullableFilter<"IdeaPurchase"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"IdeaPurchase"> | Date | string
   userId?: Prisma.StringFilter<"IdeaPurchase"> | string
@@ -258,6 +266,7 @@ export type IdeaPurchaseOrderByWithRelationInput = {
   paymentStatus?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   gateway?: Prisma.SortOrder
+  stripeEventId?: Prisma.SortOrderInput | Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   userId?: Prisma.SortOrder
@@ -269,6 +278,7 @@ export type IdeaPurchaseOrderByWithRelationInput = {
 export type IdeaPurchaseWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   transactionId?: string
+  stripeEventId?: string
   AND?: Prisma.IdeaPurchaseWhereInput | Prisma.IdeaPurchaseWhereInput[]
   OR?: Prisma.IdeaPurchaseWhereInput[]
   NOT?: Prisma.IdeaPurchaseWhereInput | Prisma.IdeaPurchaseWhereInput[]
@@ -281,7 +291,7 @@ export type IdeaPurchaseWhereUniqueInput = Prisma.AtLeast<{
   ideaId?: Prisma.StringFilter<"IdeaPurchase"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   idea?: Prisma.XOR<Prisma.IdeaScalarRelationFilter, Prisma.IdeaWhereInput>
-}, "id" | "transactionId">
+}, "id" | "transactionId" | "stripeEventId">
 
 export type IdeaPurchaseOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -289,6 +299,7 @@ export type IdeaPurchaseOrderByWithAggregationInput = {
   paymentStatus?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   gateway?: Prisma.SortOrder
+  stripeEventId?: Prisma.SortOrderInput | Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   userId?: Prisma.SortOrder
@@ -309,6 +320,7 @@ export type IdeaPurchaseScalarWhereWithAggregatesInput = {
   paymentStatus?: Prisma.EnumPaymentStatusWithAggregatesFilter<"IdeaPurchase"> | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalWithAggregatesFilter<"IdeaPurchase"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringWithAggregatesFilter<"IdeaPurchase"> | string
+  stripeEventId?: Prisma.StringNullableWithAggregatesFilter<"IdeaPurchase"> | string | null
   completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"IdeaPurchase"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"IdeaPurchase"> | Date | string
   userId?: Prisma.StringWithAggregatesFilter<"IdeaPurchase"> | string
@@ -321,6 +333,7 @@ export type IdeaPurchaseCreateInput = {
   paymentStatus?: $Enums.PaymentStatus
   amountPaid: runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway: string
+  stripeEventId?: string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutIdeaPurchasesInput
@@ -333,6 +346,7 @@ export type IdeaPurchaseUncheckedCreateInput = {
   paymentStatus?: $Enums.PaymentStatus
   amountPaid: runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway: string
+  stripeEventId?: string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
   userId: string
@@ -345,6 +359,7 @@ export type IdeaPurchaseUpdateInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFieldUpdateOperationsInput | string
+  stripeEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutIdeaPurchasesNestedInput
@@ -357,6 +372,7 @@ export type IdeaPurchaseUncheckedUpdateInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFieldUpdateOperationsInput | string
+  stripeEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -369,6 +385,7 @@ export type IdeaPurchaseCreateManyInput = {
   paymentStatus?: $Enums.PaymentStatus
   amountPaid: runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway: string
+  stripeEventId?: string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
   userId: string
@@ -381,6 +398,7 @@ export type IdeaPurchaseUpdateManyMutationInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFieldUpdateOperationsInput | string
+  stripeEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -391,6 +409,7 @@ export type IdeaPurchaseUncheckedUpdateManyInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFieldUpdateOperationsInput | string
+  stripeEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -413,6 +432,7 @@ export type IdeaPurchaseCountOrderByAggregateInput = {
   paymentStatus?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   gateway?: Prisma.SortOrder
+  stripeEventId?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   userId?: Prisma.SortOrder
@@ -429,6 +449,7 @@ export type IdeaPurchaseMaxOrderByAggregateInput = {
   paymentStatus?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   gateway?: Prisma.SortOrder
+  stripeEventId?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   userId?: Prisma.SortOrder
@@ -441,6 +462,7 @@ export type IdeaPurchaseMinOrderByAggregateInput = {
   paymentStatus?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   gateway?: Prisma.SortOrder
+  stripeEventId?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   userId?: Prisma.SortOrder
@@ -553,6 +575,7 @@ export type IdeaPurchaseCreateWithoutUserInput = {
   paymentStatus?: $Enums.PaymentStatus
   amountPaid: runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway: string
+  stripeEventId?: string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
   idea: Prisma.IdeaCreateNestedOneWithoutPurchasesInput
@@ -564,6 +587,7 @@ export type IdeaPurchaseUncheckedCreateWithoutUserInput = {
   paymentStatus?: $Enums.PaymentStatus
   amountPaid: runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway: string
+  stripeEventId?: string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
   ideaId: string
@@ -604,6 +628,7 @@ export type IdeaPurchaseScalarWhereInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFilter<"IdeaPurchase"> | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFilter<"IdeaPurchase"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFilter<"IdeaPurchase"> | string
+  stripeEventId?: Prisma.StringNullableFilter<"IdeaPurchase"> | string | null
   completedAt?: Prisma.DateTimeNullableFilter<"IdeaPurchase"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"IdeaPurchase"> | Date | string
   userId?: Prisma.StringFilter<"IdeaPurchase"> | string
@@ -616,6 +641,7 @@ export type IdeaPurchaseCreateWithoutIdeaInput = {
   paymentStatus?: $Enums.PaymentStatus
   amountPaid: runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway: string
+  stripeEventId?: string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutIdeaPurchasesInput
@@ -627,6 +653,7 @@ export type IdeaPurchaseUncheckedCreateWithoutIdeaInput = {
   paymentStatus?: $Enums.PaymentStatus
   amountPaid: runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway: string
+  stripeEventId?: string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
   userId: string
@@ -664,6 +691,7 @@ export type IdeaPurchaseCreateManyUserInput = {
   paymentStatus?: $Enums.PaymentStatus
   amountPaid: runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway: string
+  stripeEventId?: string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
   ideaId: string
@@ -675,6 +703,7 @@ export type IdeaPurchaseUpdateWithoutUserInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFieldUpdateOperationsInput | string
+  stripeEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   idea?: Prisma.IdeaUpdateOneRequiredWithoutPurchasesNestedInput
@@ -686,6 +715,7 @@ export type IdeaPurchaseUncheckedUpdateWithoutUserInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFieldUpdateOperationsInput | string
+  stripeEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ideaId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -697,6 +727,7 @@ export type IdeaPurchaseUncheckedUpdateManyWithoutUserInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFieldUpdateOperationsInput | string
+  stripeEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ideaId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -708,6 +739,7 @@ export type IdeaPurchaseCreateManyIdeaInput = {
   paymentStatus?: $Enums.PaymentStatus
   amountPaid: runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway: string
+  stripeEventId?: string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
   userId: string
@@ -719,6 +751,7 @@ export type IdeaPurchaseUpdateWithoutIdeaInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFieldUpdateOperationsInput | string
+  stripeEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutIdeaPurchasesNestedInput
@@ -730,6 +763,7 @@ export type IdeaPurchaseUncheckedUpdateWithoutIdeaInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFieldUpdateOperationsInput | string
+  stripeEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -741,6 +775,7 @@ export type IdeaPurchaseUncheckedUpdateManyWithoutIdeaInput = {
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   amountPaid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   gateway?: Prisma.StringFieldUpdateOperationsInput | string
+  stripeEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -754,6 +789,7 @@ export type IdeaPurchaseSelect<ExtArgs extends runtime.Types.Extensions.Internal
   paymentStatus?: boolean
   amountPaid?: boolean
   gateway?: boolean
+  stripeEventId?: boolean
   completedAt?: boolean
   createdAt?: boolean
   userId?: boolean
@@ -768,6 +804,7 @@ export type IdeaPurchaseSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   paymentStatus?: boolean
   amountPaid?: boolean
   gateway?: boolean
+  stripeEventId?: boolean
   completedAt?: boolean
   createdAt?: boolean
   userId?: boolean
@@ -782,6 +819,7 @@ export type IdeaPurchaseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   paymentStatus?: boolean
   amountPaid?: boolean
   gateway?: boolean
+  stripeEventId?: boolean
   completedAt?: boolean
   createdAt?: boolean
   userId?: boolean
@@ -796,13 +834,14 @@ export type IdeaPurchaseSelectScalar = {
   paymentStatus?: boolean
   amountPaid?: boolean
   gateway?: boolean
+  stripeEventId?: boolean
   completedAt?: boolean
   createdAt?: boolean
   userId?: boolean
   ideaId?: boolean
 }
 
-export type IdeaPurchaseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "transactionId" | "paymentStatus" | "amountPaid" | "gateway" | "completedAt" | "createdAt" | "userId" | "ideaId", ExtArgs["result"]["ideaPurchase"]>
+export type IdeaPurchaseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "transactionId" | "paymentStatus" | "amountPaid" | "gateway" | "stripeEventId" | "completedAt" | "createdAt" | "userId" | "ideaId", ExtArgs["result"]["ideaPurchase"]>
 export type IdeaPurchaseInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   idea?: boolean | Prisma.IdeaDefaultArgs<ExtArgs>
@@ -828,6 +867,7 @@ export type $IdeaPurchasePayload<ExtArgs extends runtime.Types.Extensions.Intern
     paymentStatus: $Enums.PaymentStatus
     amountPaid: runtime.Decimal
     gateway: string
+    stripeEventId: string | null
     completedAt: Date | null
     createdAt: Date
     userId: string
@@ -1262,6 +1302,7 @@ export interface IdeaPurchaseFieldRefs {
   readonly paymentStatus: Prisma.FieldRef<"IdeaPurchase", 'PaymentStatus'>
   readonly amountPaid: Prisma.FieldRef<"IdeaPurchase", 'Decimal'>
   readonly gateway: Prisma.FieldRef<"IdeaPurchase", 'String'>
+  readonly stripeEventId: Prisma.FieldRef<"IdeaPurchase", 'String'>
   readonly completedAt: Prisma.FieldRef<"IdeaPurchase", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"IdeaPurchase", 'DateTime'>
   readonly userId: Prisma.FieldRef<"IdeaPurchase", 'String'>

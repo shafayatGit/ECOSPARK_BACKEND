@@ -9,7 +9,8 @@
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+     "stripe:webhook": "stripe listen --forward-to localhost:9000/webhook"
   },
   "keywords": [
     "express",
@@ -39,6 +40,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^9.0.0",
     "pg": "^8.21.0",
+    "stripe": "^22.2.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

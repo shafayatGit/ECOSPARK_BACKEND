@@ -7,9 +7,15 @@ import { tokenUtils } from "../../utils/token";
 import { cookieUtils } from "../../utils/cookie";
 import { envVars } from "../../config/env";
 import { auth } from "../../lib/auth";
+import { IUserJwtPayload } from "../../interfaces/user.interface";
+import AppError from "../../errors/AppError";
+import { getSingleUploadedFileUrl } from "../../utils/uploadHelpers";
 
 const registerPatient = catchAsync(async (req: Request, res: Response) => {
-  const payload = req.body;
+  const payload = {
+    ...req.body,
+    image: getSingleUploadedFileUrl(req),
+  };
   // Call the service function to handle the registration logic
   const result = await AuthServices.registerPatient(payload);
 
@@ -82,6 +88,20 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
     httpStatusCode: status.OK,
     success: true,
     message: "Password reset successfully",
+  });
+});
+
+const getMe = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user;
+  if (!user) {
+    throw new AppError(status.NOT_FOUND, "User not found");
+  }
+  const result = await AuthServices.getMe(user);
+  sendResponse(res, {
+    httpStatusCode: status.OK,
+    success: true,
+    message: "User retrieved successfully",
+    data: result,
   });
 });
 
@@ -175,6 +195,7 @@ export const AuthControllers = {
   logOutUser,
   forgetPassword,
   resetPassword,
+  getMe,
   googleLogin,
   googleLoginSuccess,
   handleOAuthError,

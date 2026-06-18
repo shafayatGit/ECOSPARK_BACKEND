@@ -34,7 +34,6 @@ export const createIdeaSchema = z
     categoryId: z.string().min(1, "Category is required"),
     isPaid: z.boolean().optional().default(false),
     price: z.number().positive().optional(),
-    imageUrls: z.array(z.string().url()).optional().default([]),
   })
   .superRefine(paidIdeaRefinement);
 

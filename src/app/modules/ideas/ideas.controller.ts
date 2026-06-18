@@ -4,9 +4,16 @@ import { catchAsync } from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
 import { getQueryParams } from "../../middlewares/validateQuery";
 import { IdeaServices } from "./ideas.service";
+import { getMultipleUploadedFileUrls } from "../../utils/uploadHelpers";
 
 const createIdea = catchAsync(async (req: Request, res: Response) => {
-  const result = await IdeaServices.createIdea(req.body, req.user!.userId);
+  const result = await IdeaServices.createIdea(
+    {
+      ...req.body,
+      imageUrls: getMultipleUploadedFileUrls(req),
+    },
+    req.user!.userId,
+  );
 
   sendResponse(res, {
     httpStatusCode: status.CREATED,

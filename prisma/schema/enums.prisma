@@ -25,4 +25,5 @@ enum VoteType {
 enum PaymentStatus {
     PENDING
     COMPLETED
+    FAILED
 }

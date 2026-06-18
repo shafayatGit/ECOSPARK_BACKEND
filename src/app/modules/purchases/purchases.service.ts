@@ -1,38 +1,59 @@
-import crypto from "crypto";
 import status from "http-status";
 import { Prisma } from "../../../generated/prisma/client";
-import { IdeaStatus, PaymentStatus } from "../../../generated/prisma/enums";
+import {
+  IdeaStatus,
+  PaymentStatus,
+} from "../../../generated/prisma/enums";
 import AppError from "../../errors/AppError";
+import { envVars } from "../../config/env";
+import { stripe } from "../../config/stripe.config";
 import { prisma } from "../../lib/prisma";
 import { executeListQuery } from "../../utils/queryHelper";
-import { IInitiatePurchase, IWebhookPayload } from "./purchases.interface";
+import { IInitiatePurchase } from "./purchases.interface";
 
-const generateTransactionId = () =>
-  `txn_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
+const GATEWAY = "stripe";
 
-const verifyWebhookSignature = (
-  transactionId: string,
-  signature?: string,
-): boolean => {
-  const secret = process.env.PAYMENT_WEBHOOK_SECRET;
+const ideaPurchaseInclude = {
+  idea: {
+    select: {
+      id: true,
+      title: true,
+      isPaid: true,
+      price: true,
+      status: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
+    },
+  },
+} as const;
 
-  if (!secret) {
-    return process.env.NODE_ENV !== "production";
+const getPurchaseByMetadata = async (
+  metadata: Record<string, string> | null | undefined,
+) => {
+  const purchaseId = metadata?.purchaseId;
+
+  if (!purchaseId) {
+    return null;
   }
 
-  if (!signature) return false;
-
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(transactionId)
-    .digest("hex");
-
-  if (signature.length !== expected.length) return false;
-
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expected),
-  );
+  return prisma.ideaPurchase.findUnique({
+    where: { id: purchaseId },
+    include: {
+      idea: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
 };
 
 const initiatePurchase = async (
@@ -41,14 +62,6 @@ const initiatePurchase = async (
 ) => {
   const idea = await prisma.idea.findUnique({
     where: { id: payload.ideaId },
-    select: {
-      id: true,
-      title: true,
-      isPaid: true,
-      price: true,
-      status: true,
-      authorId: true,
-    },
   });
 
   if (!idea) {
@@ -62,7 +75,7 @@ const initiatePurchase = async (
     );
   }
 
-  if (!idea.isPaid || !idea.price) {
+  if (!idea.isPaid || idea.price === null) {
     throw new AppError(status.BAD_REQUEST, "This idea is not a paid idea");
   }
 
@@ -73,7 +86,7 @@ const initiatePurchase = async (
     );
   }
 
-  const existingPurchase = await prisma.ideaPurchase.findFirst({
+  const existingCompletedPurchase = await prisma.ideaPurchase.findFirst({
     where: {
       userId,
       ideaId: idea.id,
@@ -81,104 +94,255 @@ const initiatePurchase = async (
     },
   });
 
-  if (existingPurchase) {
+  if (existingCompletedPurchase) {
     throw new AppError(
       status.CONFLICT,
       "You have already purchased this idea",
     );
   }
 
-  const transactionId = generateTransactionId();
+  await prisma.ideaPurchase.updateMany({
+    where: {
+      userId,
+      ideaId: idea.id,
+      paymentStatus: PaymentStatus.PENDING,
+    },
+    data: {
+      paymentStatus: PaymentStatus.FAILED,
+    },
+  });
+
   const amountPaid = new Prisma.Decimal(idea.price);
+  const amountInCents = Math.round(Number(amountPaid) * 100);
+
+  if (amountInCents <= 0) {
+    throw new AppError(status.BAD_REQUEST, "Invalid idea price");
+  }
 
   const purchase = await prisma.ideaPurchase.create({
     data: {
+      transactionId: `pending-${crypto.randomUUID()}`,
+      paymentStatus: PaymentStatus.PENDING,
+      amountPaid,
+      gateway: GATEWAY,
       userId,
       ideaId: idea.id,
-      transactionId,
-      amountPaid,
-      gateway: "stripe",
-      paymentStatus: PaymentStatus.PENDING,
+    },
+  });
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    payment_method_types: ["card"],
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: idea.title,
+            description:
+              idea.description?.slice(0, 250) ||
+              idea.problemStatement.slice(0, 250),
+          },
+          unit_amount: amountInCents,
+        },
+        quantity: 1,
+      },
+    ],
+    metadata: {
+      purchaseId: purchase.id,
+      ideaId: idea.id,
+      userId,
+    },
+    success_url: `${envVars.FRONTEND_URL}/ideas/${idea.id}?payment=success`,
+    cancel_url: `${envVars.FRONTEND_URL}/ideas/${idea.id}?payment=cancelled`,
+  });
+
+  if (!session.url) {
+    throw new AppError(
+      status.INTERNAL_SERVER_ERROR,
+      "Failed to create Stripe checkout session",
+    );
+  }
+
+  const updatedPurchase = await prisma.ideaPurchase.update({
+    where: { id: purchase.id },
+    data: {
+      transactionId: session.id,
     },
   });
 
   return {
-    purchase,
-    checkoutUrl: `/api/purchases/checkout/${transactionId}`,
-    message:
-      "Payment initiated. Access will be granted after webhook confirmation.",
+    message: "Checkout session created successfully",
+    checkoutUrl: session.url,
+    purchase: updatedPurchase,
   };
 };
 
-const handleWebhook = async (payload: IWebhookPayload) => {
-  if (!verifyWebhookSignature(payload.transactionId, payload.signature)) {
-    throw new AppError(status.FORBIDDEN, "Invalid webhook signature");
-  }
-
+const markPurchaseFailed = async (
+  purchaseId: string,
+  stripeEventId?: string,
+) => {
   const purchase = await prisma.ideaPurchase.findUnique({
-    where: { transactionId: payload.transactionId },
+    where: { id: purchaseId },
   });
 
-  if (!purchase) {
-    throw new AppError(status.NOT_FOUND, "Purchase record not found");
-  }
-
-  if (purchase.paymentStatus === PaymentStatus.COMPLETED) {
+  if (!purchase || purchase.paymentStatus !== PaymentStatus.PENDING) {
     return purchase;
   }
 
-  if (payload.status === "FAILED") {
-    return prisma.ideaPurchase.update({
-      where: { id: purchase.id },
-      data: { paymentStatus: PaymentStatus.PENDING },
-    });
-  }
-
   return prisma.ideaPurchase.update({
-    where: { id: purchase.id },
+    where: { id: purchaseId },
     data: {
-      paymentStatus: PaymentStatus.COMPLETED,
-      completedAt: new Date(),
+      paymentStatus: PaymentStatus.FAILED,
+      ...(stripeEventId ? { stripeEventId } : {}),
     },
   });
 };
 
-const purchaseListInclude = {
-  idea: {
-    select: {
-      id: true,
-      title: true,
-      isPaid: true,
-      price: true,
-      imageUrls: true,
-      author: { select: { id: true, name: true } },
-      category: { select: { id: true, name: true, slug: true } },
-    },
+const completePurchase = async (
+  purchaseId: string,
+  stripeEventId: string,
+  session: {
+    id: string;
+    payment_status: string | null;
+    metadata?: Record<string, string> | null;
   },
-} as const;
+) => {
+  const purchase = await prisma.ideaPurchase.findUnique({
+    where: { id: purchaseId },
+  });
+
+  if (!purchase) {
+    console.error(`Purchase ${purchaseId} not found for completed checkout`);
+    return { message: "Purchase not found" };
+  }
+
+  if (purchase.paymentStatus === PaymentStatus.COMPLETED) {
+    return { message: "Purchase already completed" };
+  }
+
+  if (session.payment_status !== "paid") {
+    return { message: "Checkout session is not paid yet" };
+  }
+
+  if (session.metadata?.userId && session.metadata.userId !== purchase.userId) {
+    console.error(
+      `User mismatch for purchase ${purchaseId}. Expected ${purchase.userId}, got ${session.metadata.userId}`,
+    );
+    return { message: "Purchase user mismatch" };
+  }
+
+  if (session.metadata?.ideaId && session.metadata.ideaId !== purchase.ideaId) {
+    console.error(
+      `Idea mismatch for purchase ${purchaseId}. Expected ${purchase.ideaId}, got ${session.metadata.ideaId}`,
+    );
+    return { message: "Purchase idea mismatch" };
+  }
+
+  await prisma.ideaPurchase.update({
+    where: { id: purchaseId },
+    data: {
+      paymentStatus: PaymentStatus.COMPLETED,
+      transactionId: session.id,
+      stripeEventId,
+      completedAt: new Date(),
+    },
+  });
+
+  console.log(
+    `Payment completed for idea ${purchase.ideaId} by user ${purchase.userId}`,
+  );
+
+  return { message: "Purchase completed successfully" };
+};
+
+const handleStripeWebhook = async (event: {
+  id: string;
+  type: string;
+  data: { object: unknown };
+}) => {
+  const existingEvent = await prisma.ideaPurchase.findFirst({
+    where: {
+      stripeEventId: event.id,
+    },
+  });
+
+  if (existingEvent) {
+    console.log(`Stripe event ${event.id} already processed. Skipping.`);
+    return { message: `Event ${event.id} already processed` };
+  }
+
+  switch (event.type) {
+    case "checkout.session.completed": {
+      const session = event.data.object as {
+        id: string;
+        payment_status: string | null;
+        metadata?: Record<string, string> | null;
+      };
+      const purchase = await getPurchaseByMetadata(session.metadata);
+
+      if (!purchase) {
+        console.error("Missing purchase metadata in checkout.session.completed");
+        return { message: "Missing purchase metadata" };
+      }
+
+      return completePurchase(purchase.id, event.id, session);
+    }
+
+    case "checkout.session.expired":
+    case "checkout.session.async_payment_failed": {
+      const session = event.data.object as {
+        id: string;
+        metadata?: Record<string, string> | null;
+      };
+      const purchase = await getPurchaseByMetadata(session.metadata);
+
+      if (!purchase) {
+        console.error(`No purchase found for expired session ${session.id}`);
+        return { message: "Purchase not found for failed checkout session" };
+      }
+
+      await markPurchaseFailed(purchase.id, event.id);
+
+      console.log(
+        `Checkout session ${session.id} marked as failed for purchase ${purchase.id}`,
+      );
+
+      return { message: "Checkout session marked as failed" };
+    }
+
+    default:
+      console.log(`Unhandled Stripe event type: ${event.type}`);
+      return { message: `Unhandled event type: ${event.type}` };
+  }
+};
 
 const getMyPurchases = async (
   userId: string,
   query: Record<string, unknown> = {},
 ) => {
+  const paymentStatus =
+    (query.paymentStatus as PaymentStatus | undefined) ??
+    PaymentStatus.COMPLETED;
+
   return executeListQuery({
     model: prisma.ideaPurchase,
     query,
     config: {
-      searchableFields: ["transactionId", "gateway", "idea.title"],
+      searchableFields: ["transactionId", "gateway"],
       filterableFields: ["paymentStatus", "gateway", "ideaId"],
     },
     where: {
       userId,
-      paymentStatus: PaymentStatus.COMPLETED,
+      paymentStatus,
     },
-    include: purchaseListInclude,
-    defaultSort: { sortBy: "completedAt", sortOrder: "desc" },
+    include: ideaPurchaseInclude,
+    defaultSort: { sortBy: "createdAt", sortOrder: "desc" },
   });
 };
 
 export const PurchaseServices = {
   initiatePurchase,
-  handleWebhook,
+  handleStripeWebhook,
   getMyPurchases,
 };

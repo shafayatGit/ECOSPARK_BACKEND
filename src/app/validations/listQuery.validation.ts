@@ -45,7 +45,7 @@ export const commentListQuerySchema = baseListQuerySchema.extend({
 });
 
 export const purchaseListQuerySchema = baseListQuerySchema.extend({
-  paymentStatus: z.enum(["PENDING", "COMPLETED"]).optional(),
+  paymentStatus: z.enum(["PENDING", "COMPLETED", "FAILED"]).optional(),
   gateway: z.string().optional(),
   ideaId: z.string().optional(),
 });

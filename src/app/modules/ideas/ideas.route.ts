@@ -2,6 +2,7 @@ import { Router } from "express";
 import { checkAuth, optionalCheckAuth } from "../../middlewares/checkAuth";
 import { validateQuery } from "../../middlewares/validateQuery";
 import { validateRequest } from "../../middlewares/validateRequest";
+import { optionalMultipleUpload } from "../../config/multer.config";
 import { IdeaControllers } from "./ideas.controller";
 import {
   createIdeaSchema,
@@ -25,6 +26,7 @@ router.get("/:id", optionalCheckAuth, IdeaControllers.getIdeaById);
 router.post(
   "/",
   checkAuth(),
+  optionalMultipleUpload("images", 4),
   validateRequest(createIdeaSchema),
   IdeaControllers.createIdea,
 );

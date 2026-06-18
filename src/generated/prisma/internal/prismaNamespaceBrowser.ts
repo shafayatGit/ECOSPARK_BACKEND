@@ -190,6 +190,7 @@ export const IdeaPurchaseScalarFieldEnum = {
   paymentStatus: 'paymentStatus',
   amountPaid: 'amountPaid',
   gateway: 'gateway',
+  stripeEventId: 'stripeEventId',
   completedAt: 'completedAt',
   createdAt: 'createdAt',
   userId: 'userId',

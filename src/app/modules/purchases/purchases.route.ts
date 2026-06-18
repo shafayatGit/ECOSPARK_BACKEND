@@ -4,10 +4,7 @@ import { validateQuery } from "../../middlewares/validateQuery";
 import { validateRequest } from "../../middlewares/validateRequest";
 import { purchaseListQuerySchema } from "../../validations/listQuery.validation";
 import { PurchaseControllers } from "./purchases.controller";
-import {
-  initiatePurchaseSchema,
-  webhookPayloadSchema,
-} from "./purchases.validation";
+import { initiatePurchaseSchema } from "./purchases.validation";
 
 const router = Router();
 
@@ -16,12 +13,6 @@ router.post(
   checkAuth(),
   validateRequest(initiatePurchaseSchema),
   PurchaseControllers.initiatePurchase,
-);
-
-router.post(
-  "/webhook",
-  validateRequest(webhookPayloadSchema),
-  PurchaseControllers.handleWebhook,
 );
 
 router.get(

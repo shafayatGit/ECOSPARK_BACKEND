@@ -5,6 +5,7 @@ import { ILoginUser, IRegisterMember } from "./auth.interface";
 import { prisma } from "../../lib/prisma";
 import { UserStatus } from "../../../generated/prisma/browser";
 import { tokenUtils } from "../../utils/token";
+import { IUserJwtPayload } from "../../interfaces/user.interface";
 
 const registerPatient = async (payload: IRegisterMember) => {
   const isUserExist = await prisma.user.findUnique({
@@ -25,6 +26,14 @@ const registerPatient = async (payload: IRegisterMember) => {
   });
   if (!data.user) {
     throw new AppError(status.BAD_REQUEST, "Failed to create user");
+  }
+
+  if (payload.image) {
+    await prisma.user.update({
+      where: { id: data.user.id },
+      data: { image: payload.image },
+    });
+    data.user.image = payload.image;
   }
 
   const accessToken = tokenUtils.getAccessToken({
@@ -174,6 +183,25 @@ const resetPassword = async (
   return result;
 };
 
+const getMe = async (user: IUserJwtPayload) => {
+  const { userId } = user;
+  // console.log("UserID: ", userId);
+  const userExist = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    include: {
+      admin: true,
+    },
+  });
+
+  if (!userExist) {
+    throw new AppError(status.NOT_FOUND, "User not found");
+  }
+  return userExist;
+};
+
+
 const logOutUser = async (sessionToken: string) => {
   const result = await auth.api.signOut({
     headers: new Headers({
@@ -223,5 +251,6 @@ export const AuthServices = {
   logOutUser,
   forgetPassword,
   resetPassword,
+  getMe,
   googleLoginSuccess,
 };

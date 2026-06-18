@@ -46,7 +46,8 @@ export type VoteType = (typeof VoteType)[keyof typeof VoteType]
 
 export const PaymentStatus = {
   PENDING: 'PENDING',
-  COMPLETED: 'COMPLETED'
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED'
 } as const
 
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
