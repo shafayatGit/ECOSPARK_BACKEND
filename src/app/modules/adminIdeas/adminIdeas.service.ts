@@ -43,11 +43,18 @@ const assertAdminTransition = (
 };
 
 const getReviewQueue = async (query: Record<string, unknown> = {}) => {
-  const where = query.status ? {} : { status: IdeaStatus.PENDING };
+  const queryCopy = { ...query };
+  let where: Record<string, unknown> = {};
+
+  if (!query.status) {
+    where = { status: IdeaStatus.PENDING };
+  } else if (query.status === "ALL") {
+    delete queryCopy.status;
+  }
 
   return executeListQuery({
     model: prisma.idea,
-    query,
+    query: queryCopy,
     config: {
       searchableFields: ["title", "problemStatement", "proposedSolution"],
       filterableFields: ["status", "isPaid", "categoryId", "authorId"],
