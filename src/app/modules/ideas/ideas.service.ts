@@ -83,16 +83,10 @@ const maskPaidContent = <T extends Record<string, unknown>>(
   idea: T,
   accessGranted: boolean,
 ) => {
-  if (!idea.isPaid || accessGranted) {
-    return { ...idea, hasFullAccess: accessGranted };
-  }
-
   return {
     ...idea,
     proposedSolution: null,
     description: null,
-    hasFullAccess: false,
-    paymentRequired: true,
   };
 };
 
@@ -158,7 +152,6 @@ const getApprovedIdeas = async (query: Record<string, unknown> = {}) => {
     where: buildApprovedIdeasWhere(query),
     include: ideaListInclude,
     defaultSort: { sortBy: "createdAt", sortOrder: "desc" },
-    transform: (idea) => maskPaidContent(idea as Record<string, unknown>, !(idea as { isPaid: boolean }).isPaid),
   });
 
   return result;
@@ -174,16 +167,7 @@ const getIdeaById = async (ideaId: string, user?: IUserJwtPayload) => {
     throw new AppError(status.NOT_FOUND, "Idea not found");
   }
 
-  const accessGranted = await hasFullAccess(idea, user);
-
-  if (idea.isPaid && !accessGranted && user) {
-    throw new AppError(
-      status.PAYMENT_REQUIRED,
-      "Purchase required to access full content",
-    );
-  }
-
-  return maskPaidContent(idea, accessGranted);
+  return idea;
 };
 
 const getMyIdeas = async (
@@ -250,8 +234,7 @@ const updateIdea = async (
             ? null
             : undefined,
       imageUrls: payload.imageUrls,
-      rejectionFeedback:
-        idea.status === IdeaStatus.REJECTED ? null : undefined,
+      rejectionFeedback: idea.status === IdeaStatus.REJECTED ? null : undefined,
     },
     include: {
       author: { select: ideaAuthorSelect },
@@ -268,10 +251,7 @@ const submitIdeaForReview = async (ideaId: string, userId: string) => {
   }
 
   if (idea.authorId !== userId) {
-    throw new AppError(
-      status.FORBIDDEN,
-      "You can only submit your own ideas",
-    );
+    throw new AppError(status.FORBIDDEN, "You can only submit your own ideas");
   }
 
   const allowedFrom: IdeaStatus[] = [IdeaStatus.DRAFT, IdeaStatus.REJECTED];
