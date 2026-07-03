@@ -30,7 +30,11 @@ router.put(
 router.post("/logout", AuthControllers.logOutUser);
 router.post("/forget-password", AuthControllers.forgetPassword);
 router.post("/reset-password", AuthControllers.resetPassword);
-
+router.post(
+  "/change-password",
+  checkAuth(UserRole.ADMIN, UserRole.MEMBER),
+  AuthControllers.changePassword,
+);
 //Google Routes
 router.get("/login/google", AuthControllers.googleLogin);
 router.get("/google/success", AuthControllers.googleLoginSuccess);
