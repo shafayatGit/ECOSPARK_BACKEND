@@ -24,9 +24,13 @@ const initiatePurchase = catchAsync(async (req: Request, res: Response) => {
 
 const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
   const signature = req.headers["stripe-signature"];
+  const webHookSecret = envVars.STRIPE_WEBHOOK_SECRET;
 
-  if (!signature || typeof signature !== "string") {
-    throw new AppError(status.BAD_REQUEST, "Missing Stripe signature header");
+  if (!signature || typeof signature !== "string" || !webHookSecret) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Missing Stripe signature header or webhook secret",
+    );
   }
 
   let event;

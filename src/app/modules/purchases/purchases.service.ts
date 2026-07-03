@@ -1,9 +1,6 @@
 import status from "http-status";
 import { Prisma } from "../../../generated/prisma/client";
-import {
-  IdeaStatus,
-  PaymentStatus,
-} from "../../../generated/prisma/enums";
+import { IdeaStatus, PaymentStatus } from "../../../generated/prisma/enums";
 import AppError from "../../errors/AppError";
 import { envVars } from "../../config/env";
 import { stripe } from "../../config/stripe.config";
@@ -32,17 +29,34 @@ const ideaPurchaseInclude = {
   },
 } as const;
 
-const getPurchaseByMetadata = async (
-  metadata: Record<string, string> | null | undefined,
-) => {
-  const purchaseId = metadata?.purchaseId;
+const getPurchaseBySessionOrMetadata = async (session: {
+  id: string;
+  metadata?: Record<string, string> | null;
+}) => {
+  const purchaseId = session.metadata?.purchaseId;
 
-  if (!purchaseId) {
-    return null;
+  if (purchaseId) {
+    const purchase = await prisma.ideaPurchase.findUnique({
+      where: { id: purchaseId },
+      include: {
+        idea: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (purchase) {
+      return purchase;
+    }
   }
 
-  return prisma.ideaPurchase.findUnique({
-    where: { id: purchaseId },
+  return prisma.ideaPurchase.findFirst({
+    where: { transactionId: session.id },
     include: {
       idea: true,
       user: {
@@ -56,10 +70,7 @@ const getPurchaseByMetadata = async (
   });
 };
 
-const initiatePurchase = async (
-  payload: IInitiatePurchase,
-  userId: string,
-) => {
+const initiatePurchase = async (payload: IInitiatePurchase, userId: string) => {
   const idea = await prisma.idea.findUnique({
     where: { id: payload.ideaId },
   });
@@ -80,10 +91,7 @@ const initiatePurchase = async (
   }
 
   if (idea.authorId === userId) {
-    throw new AppError(
-      status.BAD_REQUEST,
-      "You cannot purchase your own idea",
-    );
+    throw new AppError(status.BAD_REQUEST, "You cannot purchase your own idea");
   }
 
   const existingCompletedPurchase = await prisma.ideaPurchase.findFirst({
@@ -95,10 +103,7 @@ const initiatePurchase = async (
   });
 
   if (existingCompletedPurchase) {
-    throw new AppError(
-      status.CONFLICT,
-      "You have already purchased this idea",
-    );
+    throw new AppError(status.CONFLICT, "You have already purchased this idea");
   }
 
   await prisma.ideaPurchase.updateMany({
@@ -199,6 +204,11 @@ const markPurchaseFailed = async (
   });
 };
 
+/**
+ * Complete a purchase after successful payment
+ * Once completed, the user gains full access to the idea's paid content
+ * Validates payment status and user/idea metadata before marking as complete
+ */
 const completePurchase = async (
   purchaseId: string,
   stripeEventId: string,
@@ -221,10 +231,24 @@ const completePurchase = async (
     return { message: "Purchase already completed" };
   }
 
+  // Verify payment was successful
   if (session.payment_status !== "paid") {
-    return { message: "Checkout session is not paid yet" };
+    await prisma.ideaPurchase.update({
+      where: { id: purchaseId },
+      data: {
+        paymentStatus: PaymentStatus.FAILED,
+        ...(stripeEventId ? { stripeEventId } : {}),
+      },
+    });
+
+    console.log(
+      `Checkout session ${session.id} was not paid for purchase ${purchaseId}. Marking it as failed.`,
+    );
+
+    return { message: "Checkout session payment was not successful" };
   }
 
+  // Verify user matches
   if (session.metadata?.userId && session.metadata.userId !== purchase.userId) {
     console.error(
       `User mismatch for purchase ${purchaseId}. Expected ${purchase.userId}, got ${session.metadata.userId}`,
@@ -232,6 +256,7 @@ const completePurchase = async (
     return { message: "Purchase user mismatch" };
   }
 
+  // Verify idea matches
   if (session.metadata?.ideaId && session.metadata.ideaId !== purchase.ideaId) {
     console.error(
       `Idea mismatch for purchase ${purchaseId}. Expected ${purchase.ideaId}, got ${session.metadata.ideaId}`,
@@ -239,6 +264,7 @@ const completePurchase = async (
     return { message: "Purchase idea mismatch" };
   }
 
+  // Mark purchase as completed - user now has full access to the idea
   await prisma.ideaPurchase.update({
     where: { id: purchaseId },
     data: {
@@ -250,7 +276,7 @@ const completePurchase = async (
   });
 
   console.log(
-    `Payment completed for idea ${purchase.ideaId} by user ${purchase.userId}`,
+    `Payment completed for idea ${purchase.ideaId} by user ${purchase.userId}. User now has full access.`,
   );
 
   return { message: "Purchase completed successfully" };
@@ -273,29 +299,33 @@ const handleStripeWebhook = async (event: {
   }
 
   switch (event.type) {
-    case "checkout.session.completed": {
+    case "checkout.session.completed":
+    case "checkout.session.async_payment_succeeded": {
       const session = event.data.object as {
         id: string;
         payment_status: string | null;
         metadata?: Record<string, string> | null;
       };
-      const purchase = await getPurchaseByMetadata(session.metadata);
+      const purchase = await getPurchaseBySessionOrMetadata(session);
 
       if (!purchase) {
-        console.error("Missing purchase metadata in checkout.session.completed");
-        return { message: "Missing purchase metadata" };
+        console.error(
+          `Missing purchase for Stripe session ${session.id} in event ${event.type}`,
+        );
+        return { message: "Missing purchase metadata or session reference" };
       }
 
       return completePurchase(purchase.id, event.id, session);
     }
 
     case "checkout.session.expired":
-    case "checkout.session.async_payment_failed": {
+    case "checkout.session.async_payment_failed":
+    case "checkout.session.payment_failed": {
       const session = event.data.object as {
         id: string;
         metadata?: Record<string, string> | null;
       };
-      const purchase = await getPurchaseByMetadata(session.metadata);
+      const purchase = await getPurchaseBySessionOrMetadata(session);
 
       if (!purchase) {
         console.error(`No purchase found for expired session ${session.id}`);

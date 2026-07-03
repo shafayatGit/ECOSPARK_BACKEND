@@ -24,7 +24,10 @@ const createIdea = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getApprovedIdeas = catchAsync(async (req: Request, res: Response) => {
-  const result = await IdeaServices.getApprovedIdeas(getQueryParams(req));
+  const result = await IdeaServices.getApprovedIdeas(
+    getQueryParams(req),
+    req.user,
+  );
 
   sendResponse(res, {
     httpStatusCode: status.OK,

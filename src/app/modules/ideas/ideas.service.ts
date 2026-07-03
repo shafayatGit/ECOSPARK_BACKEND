@@ -1,6 +1,10 @@
 import status from "http-status";
 import { Prisma } from "../../../generated/prisma/client";
-import { IdeaStatus, UserRole } from "../../../generated/prisma/enums";
+import {
+  IdeaStatus,
+  PaymentStatus,
+  UserRole,
+} from "../../../generated/prisma/enums";
 import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
 import { IUserJwtPayload } from "../../interfaces/user.interface";
@@ -59,30 +63,84 @@ const getIdeaOrThrow = async (ideaId: string) => {
   return idea;
 };
 
+/**
+ * Check if a user has full access to an idea's paid content
+ * Access is granted to:
+ * - Anyone if the idea is free (isPaid = false)
+ * - Admins (unrestricted access to all ideas)
+ * - The idea author (can always access their own ideas)
+ * - Users who have completed a payment for the idea
+ */
 const hasFullAccess = async (
   idea: { id: string; isPaid: boolean; authorId: string },
   user?: IUserJwtPayload,
-) => {
+): Promise<boolean> => {
+  // Free ideas are accessible to everyone
   if (!idea.isPaid) return true;
+
+  // No user logged in cannot access paid content
   if (!user) return false;
+
+  // Admins have unrestricted access to all ideas
   if (user.role === UserRole.ADMIN) return true;
+
+  // Authors have full access to their own ideas
   if (user.userId === idea.authorId) return true;
 
+  // Check if user has completed payment for this idea
   const purchase = await prisma.ideaPurchase.findFirst({
     where: {
       userId: user.userId,
       ideaId: idea.id,
-      paymentStatus: "COMPLETED",
+      paymentStatus: PaymentStatus.COMPLETED,
     },
   });
 
   return Boolean(purchase);
 };
 
-const maskPaidContent = <T extends Record<string, unknown>>(
-  idea: T,
-  accessGranted: boolean,
+/**
+ * Returns idea with content masked based on user's access level
+ * Includes hasFullAccess property for frontend to determine what to display
+ * Paid content (proposedSolution, description) is only visible if access is granted
+ */
+const getIdeaForUser = async (
+  idea: {
+    id: string;
+    isPaid: boolean;
+    authorId: string;
+    [key: string]: unknown;
+  },
+  user?: IUserJwtPayload,
 ) => {
+  // For free ideas, always grant access
+  if (!idea.isPaid) {
+    return {
+      ...idea,
+      hasFullAccess: true,
+    };
+  }
+
+  // Check user's access level for paid ideas
+  const accessGranted = await hasFullAccess(idea, user);
+
+  // Return idea with access status flag and masked/unmasked content
+  return accessGranted
+    ? {
+        ...idea,
+        hasFullAccess: true,
+      }
+    : {
+        ...maskPaidContent(idea),
+        hasFullAccess: false,
+      };
+};
+
+/**
+ * Mask paid content fields for users without access
+ * Hides proposedSolution and description from unauthorized users
+ */
+const maskPaidContent = <T extends Record<string, unknown>>(idea: T) => {
   return {
     ...idea,
     proposedSolution: null,
@@ -123,6 +181,10 @@ const ideaListInclude = {
   _count: { select: { comments: true, votes: true } },
 } as const;
 
+/**
+ * Build where clause for approved ideas query
+ * Filters for approved ideas and optionally by category
+ */
 const buildApprovedIdeasWhere = (
   query: Record<string, unknown>,
 ): Record<string, unknown> => {
@@ -141,7 +203,18 @@ const buildApprovedIdeasWhere = (
   return where;
 };
 
-const getApprovedIdeas = async (query: Record<string, unknown> = {}) => {
+/**
+ * Retrieve approved ideas with content masking based on user access
+ * Users see full content only if:
+ * - They have admin role
+ * - They are the idea author
+ * - They have completed payment for a paid idea
+ * Otherwise, paid content is masked
+ */
+const getApprovedIdeas = async (
+  query: Record<string, unknown> = {},
+  user?: IUserJwtPayload,
+) => {
   const result = await executeListQuery({
     model: prisma.idea,
     query,
@@ -154,20 +227,39 @@ const getApprovedIdeas = async (query: Record<string, unknown> = {}) => {
     defaultSort: { sortBy: "createdAt", sortOrder: "desc" },
   });
 
-  return result;
+  // Apply user-specific access control to each idea
+  const data = await Promise.all(
+    (
+      result.data as Array<{
+        id: string;
+        isPaid: boolean;
+        authorId: string;
+        [key: string]: unknown;
+      }>
+    ).map((idea) => getIdeaForUser(idea, user)),
+  );
+
+  return { ...result, data };
 };
 
+/**
+ * Retrieve a single idea by ID with proper access control
+ * Approved ideas: accessible to everyone (with content masking for unauthorized paid ideas)
+ * Non-approved ideas: only accessible to author or admin
+ */
 const getIdeaById = async (ideaId: string, user?: IUserJwtPayload) => {
   const idea = await getIdeaOrThrow(ideaId);
 
   const isOwner = user?.userId === idea.authorId;
   const isAdmin = user?.role === UserRole.ADMIN;
 
+  // Only approved ideas are visible to non-owners/non-admins
   if (idea.status !== IdeaStatus.APPROVED && !isOwner && !isAdmin) {
     throw new AppError(status.NOT_FOUND, "Idea not found");
   }
 
-  return idea;
+  // Apply user-specific content masking for paid ideas
+  return getIdeaForUser(idea, user);
 };
 
 const getMyIdeas = async (

@@ -42,6 +42,11 @@ const assertAdminTransition = (
   }
 };
 
+/**
+ * Admin retrieves review queue of ideas
+ * Admins have unrestricted access to all idea content regardless of payment status
+ * Can filter by status (defaults to PENDING if not specified)
+ */
 const getReviewQueue = async (query: Record<string, unknown> = {}) => {
   const queryCopy = { ...query };
   let where: Record<string, unknown> = {};
@@ -91,10 +96,7 @@ const approveIdea = async (ideaId: string) => {
   });
 };
 
-const rejectIdea = async (
-  ideaId: string,
-  rejectionFeedback: string,
-) => {
+const rejectIdea = async (ideaId: string, rejectionFeedback: string) => {
   const idea = await getIdeaOrThrow(ideaId);
   assertAdminTransition(idea.status, IdeaStatus.REJECTED);
 
