@@ -32,8 +32,8 @@ export const createIdeaSchema = z
       .min(20, "Proposed solution must be at least 20 characters"),
     description: z.string().optional(),
     categoryId: z.string().min(1, "Category is required"),
-    isPaid: z.boolean().optional().default(false),
-    price: z.number().positive().optional(),
+    isPaid: z.coerce.boolean().optional().default(false),
+    price: z.coerce.number().positive().optional(),
   })
   .superRefine(paidIdeaRefinement);
 
@@ -52,4 +52,6 @@ export const updateIdeaSchema = z
 
 export const getIdeasQuerySchema = ideaListQuerySchema;
 
-export const getMyIdeasQuerySchema = ideaListQuerySchema.omit({ category: true });
+export const getMyIdeasQuerySchema = ideaListQuerySchema.omit({
+  category: true,
+});

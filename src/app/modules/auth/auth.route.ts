@@ -4,7 +4,7 @@ import { checkAuth } from "../../middlewares/checkAuth";
 import { validateRequest } from "../../middlewares/validateRequest";
 import { optionalSingleUpload } from "../../config/multer.config";
 import { UserRole } from "../../../generated/prisma/enums";
-import { registerPatientSchema } from "./auth.validation";
+import { registerPatientSchema, updateProfileSchema } from "./auth.validation";
 const router = Router();
 
 router.post(
@@ -16,10 +16,17 @@ router.post(
 router.post("/verify-email", AuthControllers.verifyEmail);
 router.post("/login", AuthControllers.loginUser);
 router.get(
-    "/me",
-    checkAuth(UserRole.ADMIN, UserRole.MEMBER),
-    AuthControllers.getMe,
-  );
+  "/me",
+  checkAuth(UserRole.ADMIN, UserRole.MEMBER),
+  AuthControllers.getMe,
+);
+router.put(
+  "/profile",
+  checkAuth(UserRole.ADMIN, UserRole.MEMBER),
+  optionalSingleUpload("image"),
+  validateRequest(updateProfileSchema),
+  AuthControllers.updateProfile,
+);
 router.post("/logout", AuthControllers.logOutUser);
 router.post("/forget-password", AuthControllers.forgetPassword);
 router.post("/reset-password", AuthControllers.resetPassword);

@@ -183,6 +183,29 @@ const resetPassword = async (
   return result;
 };
 
+async function updateProfile(
+  userId: string,
+  payload: { name?: string; image?: string },
+) {
+  const userExist = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!userExist) {
+    throw new AppError(status.NOT_FOUND, "User not found");
+  }
+
+  const data: Record<string, unknown> = {};
+
+  if (payload.name !== undefined) data.name = payload.name;
+  if (payload.image !== undefined) data.image = payload.image;
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data,
+  });
+
+  return updated;
+}
+
 const getMe = async (user: IUserJwtPayload) => {
   const { userId } = user;
   // console.log("UserID: ", userId);
@@ -200,7 +223,6 @@ const getMe = async (user: IUserJwtPayload) => {
   }
   return userExist;
 };
-
 
 const logOutUser = async (sessionToken: string) => {
   const result = await auth.api.signOut({
@@ -253,4 +275,7 @@ export const AuthServices = {
   resetPassword,
   getMe,
   googleLoginSuccess,
+  updateProfile,
 };
+
+// updateProfile is exported as part of AuthServices

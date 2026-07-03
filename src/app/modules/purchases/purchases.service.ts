@@ -319,8 +319,7 @@ const handleStripeWebhook = async (event: {
     }
 
     case "checkout.session.expired":
-    case "checkout.session.async_payment_failed":
-    case "checkout.session.payment_failed": {
+    case "checkout.session.async_payment_failed": {
       const session = event.data.object as {
         id: string;
         metadata?: Record<string, string> | null;

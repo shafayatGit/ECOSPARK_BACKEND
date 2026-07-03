@@ -105,6 +105,25 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateProfile = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as IUserJwtPayload | undefined;
+  if (!user) throw new AppError(status.NOT_FOUND, "User not found");
+
+  const payload = {
+    ...req.body,
+    image: getSingleUploadedFileUrl(req),
+  } as { name?: string; image?: string };
+
+  const result = await AuthServices.updateProfile(user.userId, payload);
+
+  sendResponse(res, {
+    httpStatusCode: status.OK,
+    success: true,
+    message: "Profile updated successfully",
+    data: result,
+  });
+});
+
 const logOutUser = catchAsync(async (req: Request, res: Response) => {
   const sessionToken = req.cookies["better-auth.session_token"];
   const result = await AuthServices.logOutUser(sessionToken);
@@ -199,4 +218,5 @@ export const AuthControllers = {
   googleLogin,
   googleLoginSuccess,
   handleOAuthError,
+  updateProfile,
 };

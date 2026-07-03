@@ -19,7 +19,12 @@ router.get(
   IdeaControllers.getApprovedIdeas,
 );
 
-router.get("/my", checkAuth(), validateQuery(getMyIdeasQuerySchema), IdeaControllers.getMyIdeas);
+router.get(
+  "/my",
+  checkAuth(),
+  validateQuery(getMyIdeasQuerySchema),
+  IdeaControllers.getMyIdeas,
+);
 
 router.get("/:id", optionalCheckAuth, IdeaControllers.getIdeaById);
 
